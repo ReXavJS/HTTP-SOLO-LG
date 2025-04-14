@@ -6,15 +6,16 @@ main = Blueprint("main", __name__)
 def home():
     return {"message": "Bienvenue sur le serveur Les Loups"}, 200
 
-@main.route("/parties", methods=["POST"])
-def create_party():
-    data = request.json
-    return jsonify({"status": "OK", "party_id": 1})
-
 @main.route("/parties/<int:party_id>/join", methods=["POST"])
 def join_party(party_id):
     data = request.json
-    return jsonify({"status": "OK", "id_player": 42, "role": "villager"})
+    player_name = data.get("player_name", "inconnu")
+    return jsonify({
+        "status": "OK",
+        "id_player": 42,
+        "role": "villager"
+    })
+    
 
 @main.route("/parties/<int:party_id>/board", methods=["GET"])
 def get_board(party_id):
@@ -31,4 +32,7 @@ def get_board(party_id):
 @main.route("/parties/<int:party_id>/move", methods=["POST"])
 def make_move(party_id):
     data = request.json
-    return jsonify({"status": "OK", "new_position": {"row": 1, "col": 2}})
+    return jsonify({
+        "status": "OK",
+        "new_position": {"row": 1, "col": 2}
+    })
