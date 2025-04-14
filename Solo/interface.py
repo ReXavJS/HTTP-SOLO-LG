@@ -4,7 +4,7 @@ from terrain import Terrain
 class Interface:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("Jeu du Loup - Version Locale")
+        self.root.title("Jeu du Loup")
 
         self.config_frame = tk.Frame(self.root)
         self.config_frame.pack()
@@ -27,7 +27,7 @@ class Interface:
         fields = [
             ("Nombre de lignes", "rows"),
             ("Nombre de colonnes", "cols"),
-            ("Temps d'attente maximal pour un tour (secondes)", "wait_time"),
+            ("Temps max par tour (secondes)", "wait_time"),
             ("Nombre de tours", "max_turns"),
             ("Nombre d'obstacles", "obstacles"),
         ]
@@ -61,6 +61,7 @@ class Interface:
         self.root.bind("<Down>", lambda e: self.jouer_tour("bas"))
         self.root.bind("<Left>", lambda e: self.jouer_tour("gauche"))
         self.root.bind("<Right>", lambda e: self.jouer_tour("droite"))
+        self.root.bind("<space>", lambda e: self.passer_tour_manu())
 
         self.demarrer_tour()
 
@@ -75,15 +76,51 @@ class Interface:
             result = self.terrain.deplacer_joueur(direction)
             if result:
                 self.timer_label.config(text=result)
+
+            if self.terrain.est_fini():
+                if self.terrain.etat_partie == "victoire":
+                    self.timer_label.config(text="Victoire ! Le loup a mangé le villageois !")
+                elif self.terrain.etat_partie == "defaite":
+                    self.timer_label.config(text="Défaite ! Le villageois a été mangé par le loup.")
+                elif self.terrain.victoire_par_survie():
+                    self.timer_label.config(text="Victoire ! Le villageois a survécu !")
+                else:
+                    self.timer_label.config(text="Défaite ! Le villageois a survécu.")
+            elif result is None or ("Victoire" not in result and "Défaite" not in result):
+                self.demarrer_tour()
+
+    def passer_tour_manu(self):
+        if self.terrain.timer_actif:
+            if self.terrain.timer_id:
+                self.root.after_cancel(self.terrain.timer_id)
+            if self.countdown_id:
+                self.root.after_cancel(self.countdown_id)
+
+            self.terrain.timer_actif = False
+            self.terrain.passer_tour()
+
+            if self.terrain.est_fini():
+                if self.terrain.etat_partie == "victoire":
+                    self.timer_label.config(text="Victoire ! Le loup a mangé le villageois !")
+                elif self.terrain.etat_partie == "defaite":
+                    self.timer_label.config(text="Défaite ! Le villageois a été mangé par le loup.")
+                elif self.terrain.victoire_par_survie():
+                    self.timer_label.config(text="Victoire ! Le villageois a survécu !")
+                else:
+                    self.timer_label.config(text="Défaite ! Le villageois a survécu.")
             else:
                 self.demarrer_tour()
 
     def demarrer_tour(self):
         if self.terrain.est_fini():
-            if self.terrain.victoire_par_survie():
-                self.timer_label.config(text="Victoire ! Vous avez survécu jusqu'à la fin !")
+            if self.terrain.etat_partie == "victoire":
+                self.timer_label.config(text="Victoire ! Le loup a mangé le villageois !")
+            elif self.terrain.etat_partie == "defaite":
+                self.timer_label.config(text="Défaite ! Le villageois a été mangé par le loup.")
+            elif self.terrain.victoire_par_survie():
+                self.timer_label.config(text="Victoire ! Le villageois a survécu !")
             else:
-                self.timer_label.config(text="Perdu ! Vous avez atteint la limite de tours.")
+                self.timer_label.config(text="Défaite ! Le villageois a survécu.")
             return
 
         self.terrain.timer_actif = True
@@ -99,11 +136,11 @@ class Interface:
             self.remaining_time -= 1
             self.countdown_id = self.root.after(1000, self.countdown)
         else:
-            self.timer_label.config(text="Temps écoulé !")
+            self.timer_label.config(text="⏳ Temps écoulé !")
 
     def update_timer_display(self):
         self.timer_label.config(
-            text=f"Temps restant : {self.remaining_time}s | Tour : {self.terrain.tour + 1}/{self.terrain.max_turns}"
+            text=f"⏳ Temps : {self.remaining_time}s | Tour : {self.terrain.tour + 1}/{self.terrain.max_turns}"
         )
 
     def tour_expire(self):
@@ -111,13 +148,16 @@ class Interface:
         self.terrain.timer_actif = False
 
         if self.terrain.est_fini():
-            if self.terrain.victoire_par_survie():
-                self.timer_label.config(text="Félicitations ! Vous avez survécu jusqu'à la fin !")
+            if self.terrain.etat_partie == "victoire":
+                self.timer_label.config(text="Victoire ! Le loup a mangé le villageois !")
+            elif self.terrain.etat_partie == "defaite":
+                self.timer_label.config(text="Défaite ! Le villageois a été mangé par le loup.")
+            elif self.terrain.victoire_par_survie():
+                self.timer_label.config(text="Victoire ! Le villageois a survécu !")
             else:
-                self.timer_label.config(text="Vous avez perdu en atteignant la limite de tours.")
-            return
-
-        self.demarrer_tour()
+                self.timer_label.config(text="Défaite ! Le villageois a survécu.")
+        else:
+            self.demarrer_tour()
 
     def run(self):
         self.root.mainloop()
