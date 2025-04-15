@@ -1,5 +1,6 @@
 import requests
-
+# changer port si on veut affichage web en 8081 par exemple
+#Admin via console
 BASE_URL = "http://localhost:6000/admin"
 
 def create():

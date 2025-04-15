@@ -3,6 +3,7 @@ from tkinter import messagebox
 import socket
 import json
 
+#Interface graphique pour console admin les deux marchent
 def envoyer_au_moteur_tcp(data):
     HOST = '127.0.0.1'
     PORT = 65432
